@@ -36,6 +36,8 @@ public class MainActivity extends AppCompatActivity implements BluetoothDeviceAd
     private BtFoundReceiver mBtFoundReceiver;
     private RecyclerView mRvDevice;
     private BluetoothDeviceAdapter mDeviceAdapter;
+    private BluetoothA2dp mBluetoothA2dp;
+    private BluetoothDevice mConnectedDevice;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,14 +163,15 @@ public class MainActivity extends AppCompatActivity implements BluetoothDeviceAd
         mBluetoothAdapter.getProfileProxy(this, new BluetoothProfile.ServiceListener() {
             @Override
             public void onServiceConnected(int profile, BluetoothProfile proxy) {
-                BluetoothA2dp p = (BluetoothA2dp) proxy;
-                int connectionState = p.getConnectionState(device);
+                mBluetoothA2dp = (BluetoothA2dp) proxy;
+                mConnectedDevice = device;
+                int connectionState = mBluetoothA2dp.getConnectionState(device);
                 Log.d(TAG, "onServiceConnected " + connectionState);
                 if (connectionState != BluetoothProfile.STATE_CONNECTED) {
                     try {
-                        p.getClass()
+                        mBluetoothA2dp.getClass()
                                 .getMethod("connect", BluetoothDevice.class)
-                                .invoke(p, device);
+                                .invoke(mBluetoothA2dp, device);
                     } catch (IllegalAccessException e) {
                         e.printStackTrace();
                     } catch (InvocationTargetException e) {
@@ -227,7 +230,27 @@ public class MainActivity extends AppCompatActivity implements BluetoothDeviceAd
         super.onDestroy();
         if (mBluetoothAdapter.isDiscovering())
             stopDiscoveryBtDevice();
+
         if (mBtFoundReceiver != null)
             unregisterReceiver(mBtFoundReceiver);
+
+        if (mBluetoothA2dp != null && mConnectedDevice != null) {
+            int connectionState = mBluetoothA2dp.getConnectionState(mConnectedDevice);
+            Log.d(TAG, "onServiceConnected " + connectionState);
+            if (connectionState == BluetoothProfile.STATE_CONNECTED) {
+                try {
+                    mBluetoothA2dp.getClass()
+                            .getMethod("disconnect", BluetoothDevice.class)
+                            .invoke(mBluetoothA2dp, mConnectedDevice);
+                    mConnectedDevice = null;
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 }

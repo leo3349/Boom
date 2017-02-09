@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">Boom</string>
+    <string name="not_support_bluetooth">此设备暂不支持蓝牙</string>
+    <string name="please_open_bluetooth">请打开蓝牙</string>
+    <string name="bond_boned">已配对</string>
+    <string name="bond_boning">配对中</string>
+    <string name="bond_none">未配对</string>
+    <string name="unknown">unknown</string>
+</resources>
